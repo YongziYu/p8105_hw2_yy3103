@@ -23,11 +23,12 @@ trash_data
 
 pre_2019=read_excel("./data/trash.xlsx",skip=1,sheet=4)%>%
   janitor::clean_names() %>%
-  drop_na(total)%>%
+  drop_na()%>%
   mutate(year=2019)
+
 pre_2018=read_excel("./data/trash.xlsx",skip=1,sheet=5)%>%
   janitor::clean_names() %>%
-  drop_na(total)%>%
+  drop_na()%>%
   mutate(year=2018)
 
 pre_1819=full_join(pre_2018,pre_2019) %>%
@@ -37,9 +38,16 @@ sum(pre_1819$total)
 ```
 
 - For Mr.Trash Wheel Sheet, there are `r nrow(trash_data)` rows and `r ncol(trash_data)` columns.    Key variables are `r colnames(trash_data)`.  
-For precipitation, there are `r nrow(trash_data)` rows and `r ncol(trash_data)` columns.  
+- For precipitation, there are `r nrow(pre_1819)` rows and `r ncol(pre_1819)` columns.  
 Key variables are `r colnames(trash_data)`.  Total precipitation in 2018 is `r sum(pull(pre_2018,total))`.  Median number of sports balls in a dumpster in 2017 is `r median(pull(filter(trash_data,year=="2017"),sports_balls))`.
 
 # Problem2
-pols-month= 
-  read_csv("./data/pols-month.csv.",sheet=1)
+```{r}
+pols_month= 
+  read_csv("./data/pols_month.csv") %>%
+  separate(mon, c("year", "month","day"), sep="-") %>%
+  mutate(month=month.abb[(as.double(month))]) %>%
+  mutate(president=prez_gop+prez_dem) %>%
+  select(-prez_gop,-prez_dem,-day)
+pols_month
+```

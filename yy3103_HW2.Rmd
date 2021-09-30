@@ -1,0 +1,45 @@
+---
+title: "HW2"
+author: "Yongzi Yu"
+output: html_document
+---
+
+I'm an R Markdown document! 
+
+# Problem1
+
+```{r}
+library(tidyverse)
+library(tidyr)
+library(readxl)
+
+trash_data= 
+  read_excel("./data/trash.xlsx",skip=1,sheet=1)%>%
+  janitor::clean_names() %>%
+  select(dumpster:homes_powered)%>%
+  drop_na(dumpster)%>%
+  mutate(sports_balls=round(sports_balls))
+trash_data
+
+pre_2019=read_excel("./data/trash.xlsx",skip=1,sheet=4)%>%
+  janitor::clean_names() %>%
+  drop_na(total)%>%
+  mutate(year=2019)
+pre_2018=read_excel("./data/trash.xlsx",skip=1,sheet=5)%>%
+  janitor::clean_names() %>%
+  drop_na(total)%>%
+  mutate(year=2018)
+
+pre_1819=full_join(pre_2018,pre_2019) %>%
+  mutate(month=month.name[month])
+pre_1819
+sum(pre_1819$total)
+```
+
+- For Mr.Trash Wheel Sheet, there are `r nrow(trash_data)` rows and `r ncol(trash_data)` columns.    Key variables are `r colnames(trash_data)`.  
+For precipitation, there are `r nrow(trash_data)` rows and `r ncol(trash_data)` columns.  
+Key variables are `r colnames(trash_data)`.  Total precipitation in 2018 is `r sum(pull(pre_2018,total))`.  Median number of sports balls in a dumpster in 2017 is `r median(pull(filter(trash_data,year=="2017"),sports_balls))`.
+
+# Problem2
+pols-month= 
+  read_csv("./data/pols-month.csv.",sheet=1)

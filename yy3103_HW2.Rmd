@@ -12,6 +12,9 @@ I'm an R Markdown document!
 library(tidyverse)
 library(tidyr)
 library(readxl)
+library(Hmisc)
+library(dplyr)
+
 
 trash_data= 
   read_excel("./data/trash.xlsx",skip=1,sheet=1)%>%
@@ -46,24 +49,57 @@ Key variables are `r colnames(trash_data)`.  Total precipitation in 2018 is `r s
 pols= 
   read_csv("./data/pols_month.csv") %>%
   separate(mon, c("year", "month","day"), sep="-") %>% #separate value
-  mutate(month=month.abb[(as.double(month))]) %>% #change month
+  mutate(month=month.name[(as.double(month))]) %>% #change month
   mutate(president=prez_gop+prez_dem) %>% #add variable
-  select(-prez_gop,-prez_dem,-day) #remove col
+  select(-prez_gop,-prez_dem,-day) %>% #remove col 
+  mutate(key=paste(as.character(year),as.character(month)))
 
-snp=read_csv("./data/snp.csv")%>%
+
+snp=
+  read_csv("./data/snp.csv")%>%
   separate(date, c("month","day","year"), sep="/") %>% #separate value
-  mutate(month=month.abb[(as.double(month))]) %>% #change month
-  arrange(year,month)
+  mutate(month=month.name[(as.double(month))]) %>% #change month
+  arrange(year,month)%>%
+mutate(key=paste(as.character(year),as.character(month)))
 
-unemployment=read_csv("./data/unemployment.csv")%>%
-  janitor::clean_names() %>%
+unemployment=
+  read_csv("./data/unemployment.csv")%>%
   pivot_longer(
-    jan:dec,
+    Jan:Dec,
     names_to = "month", 
-    values_to = "rate") 
+    values_to = "rate")%>%
+mutate(key=paste(as.character(Year),as.character(month)))
 
-pols_snp=merge(pols,snp)
-pols_snp_unempl=merge(pols_snp,unemployment)
+#join
+pols_snp=left_join(pols,snp,by='key')
+pols_snp_unempl=left_join(pols_snp,unemployment,by='key')
 ```
+
 - there are `r nrow(pols_snp_unempl)` rows and `r ncol(pols_snp_unempl)` columns.    Key variables are `r colnames(pols_snp_unempl)`.  
+
+# Problem 3
+
+```{r}
+
+names= 
+  read_csv("./data/Popular_Baby_Names.csv")
+
+#remove duplicates
+names=
+  names[!duplicated(names), ]
+names %>%
+  janitor::clean_names() %>%
+  mutate(childs_first_name=capitalize(tolower(childs_first_name)))
+
+#draw plot
+names = 
+  names %>% 
+  janitor::clean_names() %>% 
+  filter(year_of_birth=='2016') %>% 
+  filter(gender=='MALE') %>% 
+  filter(ethnicity == 'WHITE NON HISPANIC')
+
+
+ggplot(names,aes(y=rank,x=count))+geom_point()
+```
 

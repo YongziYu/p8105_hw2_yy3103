@@ -6,30 +6,32 @@ output: html_document
 
 I'm an R Markdown document! 
 
-# Problem1
-
+# load packages
 ```{r}
 library(tidyverse)
 library(tidyr)
 library(readxl)
 library(Hmisc)
 library(dplyr)
+```
+# Problem1
 
-
+```{r}
 trash_data= 
   read_excel("./data/trash.xlsx",skip=1,sheet=1)%>%
   janitor::clean_names() %>%
   select(dumpster:homes_powered)%>%
   drop_na(dumpster)%>%
   mutate(sports_balls=round(sports_balls))
-trash_data
 
-pre_2019=read_excel("./data/trash.xlsx",skip=1,sheet=4)%>%
+pre_2019=
+  read_excel("./data/trash.xlsx",skip=1,sheet=4)%>%
   janitor::clean_names() %>%
   drop_na()%>%
   mutate(year=2019)
 
-pre_2018=read_excel("./data/trash.xlsx",skip=1,sheet=5)%>%
+pre_2018=
+  read_excel("./data/trash.xlsx",skip=1,sheet=5)%>%
   janitor::clean_names() %>%
   drop_na()%>%
   mutate(year=2018)
@@ -54,7 +56,6 @@ pols=
   select(-prez_gop,-prez_dem,-day) %>% #remove col 
   mutate(key=paste(as.character(year),as.character(month)))
 
-
 snp=
   read_csv("./data/snp.csv")%>%
   separate(date, c("month","day","year"), sep="/") %>% #separate value
@@ -75,21 +76,32 @@ pols_snp=left_join(pols,snp,by='key')
 pols_snp_unempl=left_join(pols_snp,unemployment,by='key')
 ```
 
-- there are `r nrow(pols_snp_unempl)` rows and `r ncol(pols_snp_unempl)` columns.    Key variables are `r colnames(pols_snp_unempl)`.  
+- For pols, there are `r nrow(pols)` rows and `r ncol(pols)` columns in the joined data set.Key variables are `r colnames(pols)`.  
+-For snp, there are `r nrow(snp)` rows and `r ncol(snp)` columns in the joined data set.Key variables are `r colnames(snp)`. 
+-For unemployment, there are `r nrow(unemployment)` rows and `r ncol(unemployment)` columns in the joined data set.Key variables are `r colnames(unemployment)`. 
+- there are `r nrow(pols_snp_unempl)` rows and `r ncol(pols_snp_unempl)` columns in the joined data set.Key variables are `r colnames(pols_snp_unempl)`.  
 
 # Problem 3
-
 ```{r}
-
 names= 
   read_csv("./data/Popular_Baby_Names.csv")
 
 #remove duplicates
 names=
   names[!duplicated(names), ]
-names %>%
+names=
+  names %>%
   janitor::clean_names() %>%
   mutate(childs_first_name=capitalize(tolower(childs_first_name)))
+
+#show most popular name in female over time
+Olivia=
+  names %>% 
+  filter(gender == "FEMALE")%>% 
+  filter(childs_first_name == "Olivia")%>% 
+  arrange(year_of_birth,-count,childs_first_name,ethnicity)
+
+#show most popular name in male over time
 
 #draw plot
 names = 

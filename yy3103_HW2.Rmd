@@ -1,7 +1,7 @@
 ---
 title: "p8105_HW2"
 author: "Yongzi Yu yy3103"
-output: html_document
+output: github_document
 ---
 
 I'm an R Markdown document! 
@@ -21,7 +21,8 @@ trash_data=
   read_excel("./data/Trash_new.xlsx",skip=1,sheet=1)%>%
   janitor::clean_names() %>%
   select(dumpster:homes_powered)%>%
-  drop_na(dumpster)%>% #omit rows that not have data
+  drop_na(dumpster)%>%  #omit rows that not have dumpster data
+  drop_na(month)%>%  #omit Total 
   mutate(sports_balls=round(sports_balls)) #round int
 
 pre_2019=
@@ -51,6 +52,7 @@ Key variables are `r colnames(trash_data)`.
 ```{r}
 pols= 
   read_csv("./data/pols_month.csv") %>%
+  janitor::clean_names() %>%
   separate(mon, c("year", "month","day"), sep="-") %>% #separate value
   mutate(month=month.name[(as.double(month))]) %>% #change month
   mutate(president=prez_gop+prez_dem) %>% #add president
@@ -59,8 +61,10 @@ pols=
 
 snp=
   read_csv("./data/snp.csv")%>%
+  janitor::clean_names() %>%
   separate(date, c("month","day","year"), sep="/") %>% #separate value
   mutate(month=month.name[(as.double(month))]) %>% #change month
+  select(-day)%>%
   arrange(year,month)
 
 unemployment=
@@ -69,9 +73,10 @@ unemployment=
     Jan:Dec,
     names_to = "month", 
     values_to = "unemployment_rate")%>% #wide to long format
-  mutate(month=month.name[as.double(match(month,month.abb))])%>% #change month
-  mutate(year=as.character(Year))%>%
-  select(-Year)
+  mutate(month=month.name[as.double(match(month,month.abb))]) %>%
+  mutate(Year=as.character(Year))%>% #change month
+  janitor::clean_names()
+  
   
 #join data sets
 pols_snp=
@@ -118,11 +123,13 @@ Olivia=
   filter(gender == "FEMALE")%>% 
   filter(childs_first_name == "Olivia")%>% 
   select(ethnicity,everything(),-gender,-count,-childs_first_name)%>% 
+  arrange(ethnicity,year_of_birth)%>% 
   pivot_wider(
     ethnicity:rank,
     names_from= "year_of_birth",
     values_from= "rank"
   )
+knitr::kable(Olivia)
 
 #show most popular name in male over time
 Male=
@@ -130,11 +137,13 @@ Male=
   filter(gender == "MALE")%>% 
   filter(rank == "1")%>% 
   select(ethnicity,childs_first_name,everything(),-gender,-count,-rank)%>% 
+  arrange(ethnicity,year_of_birth)%>%
   pivot_wider(
     ethnicity:childs_first_name,
     names_from= "year_of_birth",
     values_from= "childs_first_name"
   )
+knitr::kable(Male)
 
 #draw plot
 
@@ -146,6 +155,6 @@ names_plot =
   filter(ethnicity == 'WHITE NON HISPANIC')
 
 
-ggplot(names_plot,aes(y=rank,x=count))+geom_point()
+ggplot(names_plot,aes(rank,count))+geom_point()
 ```
 

@@ -200,39 +200,40 @@ library(Hmisc)</code></pre>
 </div>
 <div id="problem1" class="section level1">
 <h1>Problem1</h1>
-<pre class="r"><code>trash_data= 
-  read_excel(&quot;./data/trash.xlsx&quot;,skip=1,sheet=1)%&gt;%
+<pre class="r"><code>#load data
+trash_data= 
+  read_excel(&quot;./data/Trash_new.xlsx&quot;,skip=1,sheet=1)%&gt;%
   janitor::clean_names() %&gt;%
   select(dumpster:homes_powered)%&gt;%
-  drop_na(dumpster)%&gt;%
-  mutate(sports_balls=round(sports_balls))</code></pre>
+  drop_na(dumpster)%&gt;% #omit rows that not have data
+  mutate(sports_balls=round(sports_balls)) #round int</code></pre>
 <pre><code>## New names:
 ## * `` -&gt; ...15
 ## * `` -&gt; ...16
 ## * `` -&gt; ...17</code></pre>
 <pre class="r"><code>pre_2019=
-  read_excel(&quot;./data/trash.xlsx&quot;,skip=1,sheet=4)%&gt;%
+  read_excel(&quot;./data/Trash_new.xlsx&quot;,skip=1,sheet=7)%&gt;%
   janitor::clean_names() %&gt;%
-  drop_na()%&gt;%
+  drop_na()%&gt;% #omit rows that not have data
   mutate(year=2019)
 
 pre_2018=
-  read_excel(&quot;./data/trash.xlsx&quot;,skip=1,sheet=5)%&gt;%
+  read_excel(&quot;./data/Trash_new.xlsx&quot;,skip=1,sheet=8)%&gt;%
   janitor::clean_names() %&gt;%
-  drop_na()%&gt;%
+  drop_na()%&gt;% #omit rows that not have data
   mutate(year=2018)
 
 pre_1819=
   full_join(pre_2018,pre_2019) %&gt;%
-  mutate(month=month.name[month])</code></pre>
+  mutate(month=month.name[month]) #convert month # to a character</code></pre>
 <pre><code>## Joining, by = c(&quot;month&quot;, &quot;total&quot;, &quot;year&quot;)</code></pre>
-<pre class="r"><code>sum(pre_1819$total)</code></pre>
-<pre><code>## [1] 87</code></pre>
 <ul>
-<li>For Mr.Trash Wheel Sheet, there are 344 rows and 14 columns. Key variables are dumpster, month, year, date, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, glass_bottles, grocery_bags, chip_bags, sports_balls, homes_powered.<br />
+<li>For Mr.Trash Wheel Sheet, there are 488 rows and 14 columns. Key variables are dumpster, month, year, date, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, glass_bottles, grocery_bags, chip_bags, sports_balls, homes_powered.<br />
 </li>
-<li>For precipitation, there are 18 rows and 3 columns.<br />
-Key variables are dumpster, month, year, date, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, glass_bottles, grocery_bags, chip_bags, sports_balls, homes_powered. Total precipitation in 2018 is 70.33. Median number of sports balls in a dumpster in 2017 is 8.5.</li>
+<li>For precipitation, there are 24 rows and 3 columns.<br />
+Key variables are dumpster, month, year, date, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, glass_bottles, grocery_bags, chip_bags, sports_balls, homes_powered.<br />
+</li>
+<li>Total precipitation in 2018 is 70.33. Median number of sports balls in a dumpster in 2019 is 9.</li>
 </ul>
 </div>
 <div id="problem2" class="section level1">
@@ -241,9 +242,8 @@ Key variables are dumpster, month, year, date, weight_tons, volume_cubic_yards, 
   read_csv(&quot;./data/pols_month.csv&quot;) %&gt;%
   separate(mon, c(&quot;year&quot;, &quot;month&quot;,&quot;day&quot;), sep=&quot;-&quot;) %&gt;% #separate value
   mutate(month=month.name[(as.double(month))]) %&gt;% #change month
-  mutate(president=prez_gop+prez_dem) %&gt;% #add variable
-  select(-prez_gop,-prez_dem,-day) %&gt;% #remove col 
-  mutate(key=paste(as.character(year),as.character(month)))</code></pre>
+  mutate(president=prez_gop+prez_dem) %&gt;% #add president
+  select(-prez_gop,-prez_dem,-day)  #remove col </code></pre>
 <pre><code>## 
 ## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
@@ -261,8 +261,7 @@ Key variables are dumpster, month, year, date, weight_tons, volume_cubic_yards, 
   read_csv(&quot;./data/snp.csv&quot;)%&gt;%
   separate(date, c(&quot;month&quot;,&quot;day&quot;,&quot;year&quot;), sep=&quot;/&quot;) %&gt;% #separate value
   mutate(month=month.name[(as.double(month))]) %&gt;% #change month
-  arrange(year,month)%&gt;%
-mutate(key=paste(as.character(year),as.character(month)))</code></pre>
+  arrange(year,month)</code></pre>
 <pre><code>## 
 ## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
@@ -274,8 +273,10 @@ mutate(key=paste(as.character(year),as.character(month)))</code></pre>
   pivot_longer(
     Jan:Dec,
     names_to = &quot;month&quot;, 
-    values_to = &quot;unemployment_rate&quot;)%&gt;%
-  mutate(key=paste(as.character(Year),as.character(month)))</code></pre>
+    values_to = &quot;unemployment_rate&quot;)%&gt;% #wide to long format
+  mutate(month=month.name[as.double(match(month,month.abb))])%&gt;% #change month
+  mutate(year=as.character(Year))%&gt;%
+  select(-Year)</code></pre>
 <pre><code>## 
 ## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
@@ -293,16 +294,17 @@ mutate(key=paste(as.character(year),as.character(month)))</code></pre>
 ##   Nov = col_double(),
 ##   Dec = col_double()
 ## )</code></pre>
-<pre class="r"><code>#join
+<pre class="r"><code>#join data sets
 pols_snp=
-  left_join(pols,snp,by=&#39;key&#39;)
+  left_join(pols,snp,by=c(&#39;year&#39;,&#39;month&#39;)) #join snp into pols
 
 pols_snp_unempl=
-  left_join(pols_snp,unemployment,by=&#39;key&#39;)</code></pre>
+  left_join(pols_snp,unemployment,by=c(&#39;year&#39;,&#39;month&#39;))#join snp and unemployment into pols</code></pre>
 <ul>
-<li>For pols, there are 822 rows and 10 columns in the joined data set.Key variables are year, month, gov_gop, sen_gop, rep_gop, gov_dem, sen_dem, rep_dem, president, key.<br />
--For snp, there are 787 rows and 5 columns in the joined data set.Key variables are month, day, year, close, key. -For unemployment, there are 816 rows and 4 columns in the joined data set.Key variables are Year, month, unemployment_rate, key.</li>
-<li>there are 822 rows and 17 columns in the joined data set.Key variables are year.x, month.x, gov_gop, sen_gop, rep_gop, gov_dem, sen_dem, rep_dem, president, key, month.y, day, year.y, close, Year, month, unemployment_rate.</li>
+<li><p>For pols, there are 822 rows and 9 columns in the joined data set. The range of year is 1947, 2015. Key variables are year, month, gov_gop, sen_gop, rep_gop, gov_dem, sen_dem, rep_dem, president.</p></li>
+<li><p>For snp, there are 787 rows and 4 columns in the joined data set. The range of year is 1950, 2015. Key variables are month, day, year, close.</p></li>
+<li><p>For unemployment, there are 816 rows and 3 columns in the joined data set. The range of year is 1948, 2015. Key variables are month, unemployment_rate, year.</p></li>
+<li><p>there are 822 rows and 12 columns in the joined data set. The range of year is 1947, 2015. Key variables are year, month, gov_gop, sen_gop, rep_gop, gov_dem, sen_dem, rep_dem, president, day, close, unemployment_rate.</p></li>
 </ul>
 </div>
 <div id="problem-3" class="section level1">
@@ -322,10 +324,19 @@ pols_snp_unempl=
 <pre class="r"><code>#remove duplicates
 names=
   names[!duplicated(names), ]
+
+#date clean: 1.make names consistent like &#39;Olivia&#39; 2.make variable ethnicity consistent
 names=
   names %&gt;%
   janitor::clean_names() %&gt;%
-  mutate(childs_first_name=capitalize(str_to_lower(childs_first_name)))
+  mutate(
+    childs_first_name=capitalize(str_to_lower(childs_first_name)))%&gt;%
+  mutate(
+    ethnicity = recode(ethnicity,
+    &#39;ASIAN AND PACI&#39; =&#39;ASIAN AND PACIFIC ISLANDER&#39;, 
+    &#39;WHITE NON HISP&#39; = &#39;WHITE NON HISPANIC&#39;,
+    &#39;BLACK NON HISP&#39; = &#39;BLACK NON HISPANIC&#39;)
+  )
 
 #show most popular name in female over time
 Olivia=
@@ -350,7 +361,9 @@ Male=
     names_from= &quot;year_of_birth&quot;,
     values_from= &quot;childs_first_name&quot;
   )
+
 #draw plot
+
 names_plot = 
   names %&gt;% 
   janitor::clean_names() %&gt;% 
